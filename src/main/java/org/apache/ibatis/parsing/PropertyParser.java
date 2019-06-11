@@ -56,6 +56,9 @@ public class PropertyParser {
     return parser.parse(string);
   }
 
+  /**
+   * 变量属性解析器
+   */
   private static class VariableTokenHandler implements TokenHandler {
     private final Properties variables;
     private final boolean enableDefaultValue;
@@ -71,6 +74,7 @@ public class PropertyParser {
       return (variables == null) ? defaultValue : variables.getProperty(key, defaultValue);
     }
 
+    //parse ${content}:defaultValue, use property in variables to replace
     @Override
     public String handleToken(String content) {
       if (variables != null) {

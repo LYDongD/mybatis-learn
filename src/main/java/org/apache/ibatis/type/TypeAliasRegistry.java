@@ -139,6 +139,7 @@ public class TypeAliasRegistry {
   }
 
   public void registerAlias(Class<?> type) {
+    //if not use annotaion to set alias, use classname as alias name
     String alias = type.getSimpleName();
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     if (aliasAnnotation != null) {
@@ -151,8 +152,10 @@ public class TypeAliasRegistry {
     if (alias == null) {
       throw new TypeException("The parameter alias cannot be null");
     }
-    // issue #748
+    // issue #748 save in lowcase
     String key = alias.toLowerCase(Locale.ENGLISH);
+
+    // duplicate alias check
     if (typeAliases.containsKey(key) && typeAliases.get(key) != null && !typeAliases.get(key).equals(value)) {
       throw new TypeException("The alias '" + alias + "' is already mapped to the value '" + typeAliases.get(key).getName() + "'.");
     }

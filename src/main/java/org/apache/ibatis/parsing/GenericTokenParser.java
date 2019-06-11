@@ -15,6 +15,9 @@
  */
 package org.apache.ibatis.parsing;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Clinton Begin
  */
@@ -30,6 +33,23 @@ public class GenericTokenParser {
     this.handler = handler;
   }
 
+
+  public String parseByRegex(String text) {
+    Matcher m = Pattern.compile("\\$\\{(.*?)\\}").matcher(text);
+    while (m.find()) {
+      text = text.replace(m.group(), handler.handleToken(m.group(1)));
+    }
+    return text;
+  }
+
+  /**
+   * 占位符替换算法，例如${variable}替换成具体成具体属性值
+   * 1 考虑转义字符的情况
+   * 2 使用属性字典进行替换
+   * 3 字符串 -> 字符数组 -> 循环查找 open/close token -> 替换 -> 拼接组合
+   * @param text 变量
+   * @return
+   */
   public String parse(String text) {
     if (text == null || text.isEmpty()) {
       return "";
@@ -41,11 +61,17 @@ public class GenericTokenParser {
     }
     char[] src = text.toCharArray();
     int offset = 0;
+
+    //use string builder to build final string to return
     final StringBuilder builder = new StringBuilder();
+
+    //use expression to build variable string : ${varibale}
     StringBuilder expression = null;
+
+    //update offset after appending by offset and length [offsert, start/end]
     while (start > -1) {
       if (start > 0 && src[start - 1] == '\\') {
-        // this open token is escaped. remove the backslash and continue.
+        // this open token is escaped. remove the backslash and continue. 转义字符，更新查找的起始偏移量 offset, 去掉转义字符后拼接openToekn
         builder.append(src, offset, start - offset - 1).append(openToken);
         offset = start + openToken.length();
       } else {
@@ -57,6 +83,7 @@ public class GenericTokenParser {
         }
         builder.append(src, offset, start - offset);
         offset = start + openToken.length();
+        //serch close token
         int end = text.indexOf(closeToken, offset);
         while (end > -1) {
           if (end > offset && src[end - 1] == '\\') {
@@ -79,6 +106,7 @@ public class GenericTokenParser {
           offset = end + closeToken.length();
         }
       }
+      //find all the ${} by openToken
       start = text.indexOf(openToken, offset);
     }
     if (offset < src.length) {

@@ -104,30 +104,45 @@ public class XMLConfigBuilder extends BaseBuilder {
       //issue #117 read properties first
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      //TODO what is vfs
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("typeAliases"));
+
+      //add plugin(interceptor) to interceptor chain
       pluginElement(root.evalNode("plugins"));
+
+      //set custom objectFactory, objectWrapperFactory & reflectorFactory
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       settingsElement(settings);
+
       // read it after objectFactory and objectWrapperFactory issue #631
+      //parse environment: transaction & datasource
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       typeHandlerElement(root.evalNode("typeHandlers"));
+
+      //parse mappers locaation settings
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
     }
   }
 
+  /**
+   * parse <settings></settings>
+   * @param context
+   * @return
+   */
   private Properties settingsAsProperties(XNode context) {
     if (context == null) {
       return new Properties();
     }
     Properties props = context.getChildrenAsProperties();
-    // Check that all settings are known to the configuration class
+
+    // Check that all settings are known to the configuration class, use reflection to check setter method with the property
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
@@ -151,14 +166,24 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * set log impl, if not set, myabtis will look up automatically
+   * SLF4J | LOG4J | LOG4J2 | JDK_LOGGING | COMMONS_LOGGING | STDOUT_LOGGING | NO_LOGGING
+   * @param props
+   */
   private void loadCustomLogImpl(Properties props) {
     Class<? extends Log> logImpl = resolveClass(props.getProperty("logImpl"));
     configuration.setLogImpl(logImpl);
   }
 
+  /**
+   * register alias : put alias -> clazz to a hashMap
+   * @param parent
+   */
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //support batch setting by package or single setting by alias
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
@@ -167,6 +192,7 @@ public class XMLConfigBuilder extends BaseBuilder {
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
+            //support setting alias by annotation
             if (alias == null) {
               typeAliasRegistry.registerAlias(clazz);
             } else {
@@ -192,6 +218,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * set custom object factory
+   * @param context
+   * @throws Exception
+   */
   private void objectFactoryElement(XNode context) throws Exception {
     if (context != null) {
       String type = context.getStringAttribute("type");
@@ -218,23 +249,40 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * parse <properties></properties>
+   * priority: property < resource/url
+   * @param context
+   * @throws Exception
+   */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+
+      //use java.util.Properties which is an hash table to hold all properties
       Properties defaults = context.getChildrenAsProperties();
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
+
+      //resource and url can be set only one
       if (resource != null && url != null) {
+        //an exception with advice
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
+
+      //parse resource/url, add properties to hash table
       if (resource != null) {
         defaults.putAll(Resources.getResourceAsProperties(resource));
       } else if (url != null) {
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
+
+      //add properties to configuration
       Properties vars = configuration.getVariables();
       if (vars != null) {
         defaults.putAll(vars);
       }
+
+      //TODO why parse hold the properties
       parser.setVariables(defaults);
       configuration.setVariables(defaults);
     }
@@ -332,6 +380,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeHandlerElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //support package scan
         if ("package".equals(child.getName())) {
           String typeHandlerPackage = child.getStringAttribute("name");
           typeHandlerRegistry.register(typeHandlerPackage);
@@ -346,9 +395,11 @@ public class XMLConfigBuilder extends BaseBuilder {
             if (jdbcType == null) {
               typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);
             } else {
+              //find jdbcType through annotation @MappedJdbcTypes
               typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
             }
           } else {
+            //find javaType through annotation  @MappedTypes
             typeHandlerRegistry.register(typeHandlerClass);
           }
         }
@@ -359,6 +410,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //support package, resource, url and mapperClass
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);

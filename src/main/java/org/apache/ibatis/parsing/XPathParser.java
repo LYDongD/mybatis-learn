@@ -40,6 +40,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
+ * use java xml api to parse xml file
+ * xml -> document
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -47,8 +49,11 @@ public class XPathParser {
 
   private final Document document;
   private boolean validation;
+  //use local dtd to resolve xml
   private EntityResolver entityResolver;
   private Properties variables;
+
+  //use XPath to parse elements
   private XPath xpath;
 
   public XPathParser(String xml) {
@@ -111,6 +116,13 @@ public class XPathParser {
     this.document = document;
   }
 
+  /**
+   * construct XPathParser
+   * @param xml xml file path
+   * @param validation validate xml or not
+   * @param variables properties
+   * @param entityResolver xml entiry resolver
+   */
   public XPathParser(String xml, boolean validation, Properties variables, EntityResolver entityResolver) {
     commonConstructor(validation, variables, entityResolver);
     this.document = createDocument(new InputSource(new StringReader(xml)));
@@ -141,6 +153,7 @@ public class XPathParser {
 
   public String evalString(Object root, String expression) {
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
+    //if result is active mode, like ${xxx}, then replace it with property in variables(properties)
     result = PropertyParser.parse(result, variables);
     return result;
   }

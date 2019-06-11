@@ -77,6 +77,44 @@ class GenericTokenParserTest {
   }
 
   @Test
+  public void parseByRegrex(){
+    GenericTokenParser parser = new GenericTokenParser("${", "}", new VariableTokenHandler(new HashMap<String, String>() {
+      {
+        put("first_name", "James");
+        put("initial", "T");
+        put("last_name", "Kirk");
+        put("var{with}brace", "Hiya");
+        put("", "");
+      }
+    }));
+
+    assertEquals("James T Kirk reporting.", parser.parseByRegex("${first_name} ${initial} ${last_name} reporting."));
+    assertEquals("Hello captain James T Kirk", parser.parseByRegex("Hello captain ${first_name} ${initial} ${last_name}"));
+    assertEquals("James T Kirk", parser.parseByRegex("${first_name} ${initial} ${last_name}"));
+    assertEquals("JamesTKirk", parser.parseByRegex("${first_name}${initial}${last_name}"));
+    assertEquals("{}JamesTKirk", parser.parseByRegex("{}${first_name}${initial}${last_name}"));
+    assertEquals("}JamesTKirk", parser.parseByRegex("}${first_name}${initial}${last_name}"));
+
+    assertEquals("}James{{T}}Kirk", parser.parseByRegex("}${first_name}{{${initial}}}${last_name}"));
+    assertEquals("}James}T{Kirk", parser.parseByRegex("}${first_name}}${initial}{${last_name}"));
+    assertEquals("}James}T{Kirk", parser.parseByRegex("}${first_name}}${initial}{${last_name}"));
+    assertEquals("}James}T{Kirk{{}}", parser.parseByRegex("}${first_name}}${initial}{${last_name}{{}}"));
+    assertEquals("}James}T{Kirk{{}}", parser.parseByRegex("}${first_name}}${initial}{${last_name}{{}}${}"));
+
+    assertEquals("{$$something}JamesTKirk", parser.parseByRegex("{$$something}${first_name}${initial}${last_name}"));
+    assertEquals("${", parser.parseByRegex("${"));
+    assertEquals("", parser.parseByRegex("${}"));
+    assertEquals("}", parser.parseByRegex("}"));
+    assertEquals("Hello ${ this is a test.", parser.parseByRegex("Hello ${ this is a test."));
+    assertEquals("Hello } this is a test.", parser.parseByRegex("Hello } this is a test."));
+    assertEquals("Hello } ${ this is a test.", parser.parseByRegex("Hello } ${ this is a test."));
+
+    //正则表达式解析方法暂时无法处理转义的case
+    //assertEquals("${\\}", parser.parseByRegex("${\\}"));
+    //assertEquals("Hiya", parser.parseByRegex("${var{with\\}brace}"));
+  }
+
+  @Test
   void shallNotInterpolateSkippedVaiables() {
     GenericTokenParser parser = new GenericTokenParser("${", "}", new VariableTokenHandler(new HashMap<>()));
 
