@@ -41,6 +41,7 @@ class XPathParserTest {
       XNode node = parser.evalNode("/employee/height");
       assertEquals("employee/height", node.getPath());
       assertEquals("employee[${id_var}]_height", node.getValueBasedIdentifier());
+      assertEquals(5.8, node.getDoubleBody());
     }
   }
 

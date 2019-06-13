@@ -95,6 +95,9 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     }
   }
 
+  /**
+   *  handle collection interface
+   */
   protected Class<?> resolveInterface(Class<?> type) {
     Class<?> classToCreate;
     if (type == List.class || type == Collection.class || type == Iterable.class) {

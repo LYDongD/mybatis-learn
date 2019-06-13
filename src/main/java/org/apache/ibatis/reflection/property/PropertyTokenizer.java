@@ -18,6 +18,7 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * parse like order[0].item[0].name => order[0], item[0], name
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
@@ -36,6 +37,8 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
       children = null;
     }
     indexedName = name;
+
+    //index exist if name contains []
     delim = name.indexOf('[');
     if (delim > -1) {
       index = name.substring(delim + 1, name.length() - 1);
@@ -64,6 +67,9 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
     return children != null;
   }
 
+  /**
+   *  parse children
+   */
   @Override
   public PropertyTokenizer next() {
     return new PropertyTokenizer(children);

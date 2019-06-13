@@ -40,6 +40,7 @@ public class BeanWrapper extends BaseWrapper {
     this.metaClass = MetaClass.forClass(object.getClass(), metaObject.getReflectorFactory());
   }
 
+  //get property value
   @Override
   public Object get(PropertyTokenizer prop) {
     if (prop.getIndex() != null) {
@@ -157,6 +158,10 @@ public class BeanWrapper extends BaseWrapper {
     return metaValue;
   }
 
+  /**
+   *  find getter method for this property
+   *  invoke getter method to get property value
+   */
   private Object getBeanProperty(PropertyTokenizer prop, Object object) {
     try {
       Invoker method = metaClass.getGetInvoker(prop.getName());

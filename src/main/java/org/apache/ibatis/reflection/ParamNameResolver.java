@@ -107,7 +107,7 @@ public class ParamNameResolver {
    * ...).
    * </p>
    */
-  public Object getNamedParams(Object[] args) {
+    public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {
       return null;

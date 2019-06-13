@@ -46,6 +46,9 @@ public class PropertyParser {
   private static final String ENABLE_DEFAULT_VALUE = "false";
   private static final String DEFAULT_VALUE_SEPARATOR = ":";
 
+  /**
+   *  工具类进制实例化
+   */
   private PropertyParser() {
     // Prevent Instantiation
   }
@@ -79,7 +82,7 @@ public class PropertyParser {
     public String handleToken(String content) {
       if (variables != null) {
         String key = content;
-        if (enableDefaultValue) {
+        if (enableDefaultValue) { //if switch enablDefaultValue by external config, then parse default value by default value separator
           final int separatorIndex = content.indexOf(defaultValueSeparator);
           String defaultValue = null;
           if (separatorIndex >= 0) {

@@ -57,6 +57,9 @@ public class MetaObject {
     }
   }
 
+  /**
+   *  static constructor util method, providing default constructor
+   */
   public static MetaObject forObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory, ReflectorFactory reflectorFactory) {
     if (object == null) {
       return SystemMetaObject.NULL_META_OBJECT;
@@ -111,6 +114,7 @@ public class MetaObject {
 
   public Object getValue(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //parse value from outter to inner
     if (prop.hasNext()) {
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {

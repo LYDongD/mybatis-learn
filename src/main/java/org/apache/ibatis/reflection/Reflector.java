@@ -42,6 +42,8 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
  *
+ * Class reflection metadata cache
+ *
  * @author Clinton Begin
  */
 public class Reflector {
@@ -49,14 +51,20 @@ public class Reflector {
   private final Class<?> type;
   private final String[] readablePropertyNames;
   private final String[] writablePropertyNames;
-  private final Map<String, Invoker> setMethods = new HashMap<>();
-  private final Map<String, Invoker> getMethods = new HashMap<>();
-  private final Map<String, Class<?>> setTypes = new HashMap<>();
-  private final Map<String, Class<?>> getTypes = new HashMap<>();
+  private final Map<String, Invoker> setMethods = new HashMap<>(); //field -> setter method
+  private final Map<String, Invoker> getMethods = new HashMap<>(); // field -> getter method
+  private final Map<String, Class<?>> setTypes = new HashMap<>(); //cache setter parameter type: field -> setter method parameterType
+  private final Map<String, Class<?>> getTypes = new HashMap<>(); //cache getter return type: field -> getter method returnType
   private Constructor<?> defaultConstructor;
 
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
+  /**
+   *  cache class metadata
+   *  1 default constructor
+   *  2 getter/setter method signature
+   *  3 fields
+   */
   public Reflector(Class<?> clazz) {
     type = clazz;
     addDefaultConstructor(clazz);
@@ -73,6 +81,9 @@ public class Reflector {
     }
   }
 
+  /**
+   *  add default constructor, which takes 0 parameter
+   */
   private void addDefaultConstructor(Class<?> clazz) {
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
     for (Constructor<?> constructor : consts) {
@@ -99,29 +110,40 @@ public class Reflector {
     resolveGetterConflicts(conflictingGetters);
   }
 
+  /**
+   *  resolve conflict
+   *  1 boolean property, select isXXX instead of getXXX or hasXXX
+   *  2 select subclass or subInterface return type method
+   */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+    //interesting code, select a winner from candidates
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
       String propName = entry.getKey();
       for (Method candidate : entry.getValue()) {
+        //firstly select first candidate as winner
         if (winner == null) {
           winner = candidate;
           continue;
         }
+
+        //handle conflict by return type
         Class<?> winnerType = winner.getReturnType();
         Class<?> candidateType = candidate.getReturnType();
+
+        //handle boolean property getter method conflict
         if (candidateType.equals(winnerType)) {
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
                     + propName + " in class " + winner.getDeclaringClass()
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
-          } else if (candidate.getName().startsWith("is")) {
+          } else if (candidate.getName().startsWith("is")) { //isXXX method take the higher priority for boolean property
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
-        } else if (winnerType.isAssignableFrom(candidateType)) {
+        } else if (winnerType.isAssignableFrom(candidateType)) {  //use subclass or subIntrface as the winner
           winner = candidate;
         } else {
           throw new ReflectionException(
@@ -168,15 +190,17 @@ public class Reflector {
       Class<?> getterType = getTypes.get(propName);
       Method match = null;
       ReflectionException exception = null;
+      //find match setter
       for (Method setter : setters) {
         Class<?> paramType = setter.getParameterTypes()[0];
-        if (paramType.equals(getterType)) {
+        if (paramType.equals(getterType)) { //setter best match means parameter type as same as getter return type
           // should be the best match
           match = setter;
           break;
         }
         if (exception == null) {
           try {
+            //better means subclass or subinterface parameter type is better
             match = pickBetterSetter(match, setter, propName);
           } catch (ReflectionException e) {
             // there could still be the 'best match'
@@ -240,12 +264,15 @@ public class Reflector {
 
   private void addFields(Class<?> clazz) {
     Field[] fields = clazz.getDeclaredFields();
+
+    //only handle field without setter or getter method
     for (Field field : fields) {
       if (!setMethods.containsKey(field.getName())) {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
         // pr #16 - final static can only be set by the classloader
         int modifiers = field.getModifiers();
+        //only handle field with neither final nor static modifier
         if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
           addSetField(field);
         }
@@ -254,6 +281,8 @@ public class Reflector {
         addGetField(field);
       }
     }
+
+    //recursively handle superclass
     if (clazz.getSuperclass() != null) {
       addFields(clazz.getSuperclass());
     }

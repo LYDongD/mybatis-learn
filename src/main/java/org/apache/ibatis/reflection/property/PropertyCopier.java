@@ -48,6 +48,8 @@ public final class PropertyCopier {
           // Nothing useful to do, will only fail on final fields, which will be ignored.
         }
       }
+
+      //copy all fields from current class and it's super class
       parent = parent.getSuperclass();
     }
   }
