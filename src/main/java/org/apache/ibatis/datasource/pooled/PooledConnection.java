@@ -54,6 +54,7 @@ class PooledConnection implements InvocationHandler {
     this.createdTimestamp = System.currentTimeMillis();
     this.lastUsedTimestamp = System.currentTimeMillis();
     this.valid = true;
+    // JDK Proxy and set handler PolledConnection itself
     this.proxyConnection = (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), IFACES, this);
   }
 
@@ -223,6 +224,7 @@ class PooledConnection implements InvocationHandler {
 
   /**
    * Required for InvocationHandler implementation.
+   * proxy connection handler invoke
    *
    * @param proxy  - not used
    * @param method - the method to be executed
@@ -233,7 +235,7 @@ class PooledConnection implements InvocationHandler {
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
-      dataSource.pushConnection(this);
+      dataSource.pushConnection(this); //return to pool, avoid connection being closed
       return null;
     }
     try {

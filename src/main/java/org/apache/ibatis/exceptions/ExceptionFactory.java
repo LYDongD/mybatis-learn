@@ -27,6 +27,7 @@ public class ExceptionFactory {
   }
 
   public static RuntimeException wrapException(String message, Exception e) {
+    //ErrorContext provides chain grammar to add error context factor
     return new PersistenceException(ErrorContext.instance().message(message).cause(e).toString(), e);
   }
 

@@ -40,6 +40,7 @@ public class UnpooledDataSource implements DataSource {
 
   private ClassLoader driverClassLoader;
   private Properties driverProperties;
+  //save drivers registered, if not , register and add it
   private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
 
   private String driver;
@@ -193,7 +194,7 @@ public class UnpooledDataSource implements DataSource {
 
   /**
    * Sets the default network timeout value to wait for the database operation to complete. See {@link Connection#setNetworkTimeout(java.util.concurrent.Executor, int)}
-   * 
+   *
    * @param milliseconds
    *          The time in milliseconds to wait for the database operation to complete.
    * @since 3.5.2
@@ -217,9 +218,9 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private Connection doGetConnection(Properties properties) throws SQLException {
-    initializeDriver();
+    initializeDriver(); //init & register driver if not registered, use reflection
     Connection connection = DriverManager.getConnection(url, properties);
-    configureConnection(connection);
+    configureConnection(connection); //configure transaction and autocommit
     return connection;
   }
 
@@ -255,6 +256,9 @@ public class UnpooledDataSource implements DataSource {
     }
   }
 
+  /**
+   *  decorator pattern
+   */
   private static class DriverProxy implements Driver {
     private Driver driver;
 

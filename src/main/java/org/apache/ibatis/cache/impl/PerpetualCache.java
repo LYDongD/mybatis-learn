@@ -70,6 +70,9 @@ public class PerpetualCache implements Cache {
     return null;
   }
 
+  /**
+   *  cache equals by ref or id
+   */
   @Override
   public boolean equals(Object o) {
     if (getId() == null) {

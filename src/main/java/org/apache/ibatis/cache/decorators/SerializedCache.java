@@ -30,6 +30,8 @@ import org.apache.ibatis.cache.CacheException;
 import org.apache.ibatis.io.Resources;
 
 /**
+ * cache serialization value （byte[])
+ * serialize when write and deserialize when read key
  * @author Clinton Begin
  */
 public class SerializedCache implements Cache {
@@ -90,6 +92,7 @@ public class SerializedCache implements Cache {
     return delegate.equals(obj);
   }
 
+  //serialize use java serialization protocol
   private byte[] serialize(Serializable value) {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
          ObjectOutputStream oos = new ObjectOutputStream(bos)) {
@@ -100,7 +103,7 @@ public class SerializedCache implements Cache {
       throw new CacheException("Error serializing object.  Cause: " + e, e);
     }
   }
-
+  //deserialize use java serialization protocol
   private Serializable deserialize(byte[] value) {
     Serializable result;
     try (ByteArrayInputStream bis = new ByteArrayInputStream(value);

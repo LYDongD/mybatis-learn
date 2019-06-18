@@ -48,6 +48,7 @@ public class JndiDataSourceFactory implements DataSourceFactory {
         initCtx = new InitialContext(env);
       }
 
+      //find datasource by jndi-name(DATA_SOURCE) in init_context or default InitContext if init_context not configured
       if (properties.containsKey(INITIAL_CONTEXT)
           && properties.containsKey(DATA_SOURCE)) {
         Context ctx = (Context) initCtx.lookup(properties.getProperty(INITIAL_CONTEXT));
@@ -66,6 +67,7 @@ public class JndiDataSourceFactory implements DataSourceFactory {
     return dataSource;
   }
 
+  //get env properties by env. prefix like env.encoding=UTF8
   private static Properties getEnvProperties(Properties allProps) {
     final String PREFIX = ENV_PREFIX;
     Properties contextProperties = null;

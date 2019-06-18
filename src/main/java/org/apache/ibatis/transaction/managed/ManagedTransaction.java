@@ -72,6 +72,7 @@ public class ManagedTransaction implements Transaction {
     // Does nothing
   }
 
+  //close connection when transaction close if property closeConnection set true
   @Override
   public void close() throws SQLException {
     if (this.closeConnection && this.connection != null) {

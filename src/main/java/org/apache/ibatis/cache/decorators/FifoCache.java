@@ -30,11 +30,11 @@ public class FifoCache implements Cache {
 
   private final Cache delegate;
   private final Deque<Object> keyList;
-  private int size;
+  private int size;  //cache capacity
 
   public FifoCache(Cache delegate) {
     this.delegate = delegate;
-    this.keyList = new LinkedList<>();
+    this.keyList = new LinkedList<>(); //use double linked list to implement a Dequeue
     this.size = 1024;
   }
 
@@ -80,7 +80,7 @@ public class FifoCache implements Cache {
   }
 
   private void cycleKeyList(Object key) {
-    keyList.addLast(key);
+    keyList.addLast(key); //add before delete
     if (keyList.size() > size) {
       Object oldestKey = keyList.removeFirst();
       delegate.removeObject(oldestKey);

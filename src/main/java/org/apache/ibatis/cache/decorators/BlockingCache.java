@@ -38,7 +38,7 @@ public class BlockingCache implements Cache {
 
   private long timeout;
   private final Cache delegate;
-  private final ConcurrentHashMap<Object, ReentrantLock> locks;
+  private final ConcurrentHashMap<Object, ReentrantLock> locks; //a key holds a lock
 
   public BlockingCache(Cache delegate) {
     this.delegate = delegate;
@@ -64,11 +64,14 @@ public class BlockingCache implements Cache {
     }
   }
 
+  /**
+   *  this method leads to cache can not be read concurrently
+   */
   @Override
   public Object getObject(Object key) {
     acquireLock(key);
     Object value = delegate.getObject(key);
-    if (value != null) {
+    if (value != null) { //blocked other thread to read and set cache later on at current thread
       releaseLock(key);
     }
     return value;

@@ -25,6 +25,7 @@ public class PoolState {
 
   protected PooledDataSource dataSource;
 
+  //two containers separately hold the idle and active connections
   protected final List<PooledConnection> idleConnections = new ArrayList<>();
   protected final List<PooledConnection> activeConnections = new ArrayList<>();
   protected long requestCount = 0;

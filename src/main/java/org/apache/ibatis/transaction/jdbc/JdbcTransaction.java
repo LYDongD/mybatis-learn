@@ -85,7 +85,7 @@ public class JdbcTransaction implements Transaction {
   @Override
   public void close() throws SQLException {
     if (connection != null) {
-      resetAutoCommit();
+      resetAutoCommit(); //close transaction means reset connection autocommit to true
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + connection + "]");
       }

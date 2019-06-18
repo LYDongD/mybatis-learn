@@ -48,11 +48,11 @@ public class LruCache implements Cache {
   }
 
   public void setSize(final int size) {
-    keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) {
+    keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) { //use LinkedHashMap to implement a LRU cache
       private static final long serialVersionUID = 4267176411845948333L;
 
       @Override
-      protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
+      protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) { //just update eldestKey and remove by cycleKeyList method
         boolean tooBig = size() > size;
         if (tooBig) {
           eldestKey = eldest.getKey();

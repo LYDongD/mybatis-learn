@@ -58,6 +58,8 @@ public class LoggingCache implements Cache {
     if (value != null) {
       hits++;
     }
+
+    //cache hit ratio = hits / requests
     if (log.isDebugEnabled()) {
       log.debug("Cache Hit Ratio [" + getId() + "]: " + getHitRatio());
     }

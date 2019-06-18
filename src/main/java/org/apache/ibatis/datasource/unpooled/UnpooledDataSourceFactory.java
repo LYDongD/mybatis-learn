@@ -44,11 +44,12 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
     MetaObject metaDataSource = SystemMetaObject.forObject(dataSource);
     for (Object key : properties.keySet()) {
       String propertyName = (String) key;
-      if (propertyName.startsWith(DRIVER_PROPERTY_PREFIX)) {
+      if (propertyName.startsWith(DRIVER_PROPERTY_PREFIX)) { //remove drive prefix in driver.... if driver prefix exists
         String value = properties.getProperty(propertyName);
         driverProperties.setProperty(propertyName.substring(DRIVER_PROPERTY_PREFIX_LENGTH), value);
       } else if (metaDataSource.hasSetter(propertyName)) {
         String value = (String) properties.get(propertyName);
+        //string value -> specific property type value
         Object convertedValue = convertValue(metaDataSource, propertyName, value);
         metaDataSource.setValue(propertyName, convertedValue);
       } else {

@@ -99,6 +99,11 @@ public class ErrorContext {
     return this;
   }
 
+  /**
+   * build log error string by context factors
+   * tell where the error may exist
+   * @return
+   */
   @Override
   public String toString() {
     StringBuilder description = new StringBuilder();
