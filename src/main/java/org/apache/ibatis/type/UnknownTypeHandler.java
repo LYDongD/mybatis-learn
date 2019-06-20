@@ -73,9 +73,10 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
     if (parameter == null) {
       handler = OBJECT_TYPE_HANDLER;
     } else {
+      //search matched handler throught registry by parameter class and jdbcType
       handler = typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
       // check if handler is null (issue #270)
-      if (handler == null || handler instanceof UnknownTypeHandler) {
+      if (handler == null || handler instanceof UnknownTypeHandler) { //default ObjectTypeHandler
         handler = OBJECT_TYPE_HANDLER;
       }
     }
@@ -85,6 +86,7 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
   private TypeHandler<?> resolveTypeHandler(ResultSet rs, String column) {
     try {
       Map<String,Integer> columnIndexLookup;
+      //construct a result set meta data dic: index -> column name
       columnIndexLookup = new HashMap<>();
       ResultSetMetaData rsmd = rs.getMetaData();
       int count = rsmd.getColumnCount();

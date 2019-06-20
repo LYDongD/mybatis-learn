@@ -52,7 +52,7 @@ public abstract class VFS {
       impls.addAll(USER_IMPLEMENTATIONS);
       impls.addAll(Arrays.asList((Class<? extends VFS>[]) IMPLEMENTATIONS));
 
-      // Try each implementation class until a valid one is found
+      // Try each implementation class until a valid one is found: priority: user vfs > JBoss6VFS > DefaultVFS
       VFS vfs = null;
       for (int i = 0; vfs == null || !vfs.isValid(); i++) {
         Class<? extends VFS> impl = impls.get(i);

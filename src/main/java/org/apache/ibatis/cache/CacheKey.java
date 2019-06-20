@@ -106,6 +106,9 @@ public class CacheKey implements Cloneable, Serializable {
     return true;
   }
 
+  /**
+   *  custom hash code algorithm
+   */
   @Override
   public int hashCode() {
     return hashcode;

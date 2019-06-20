@@ -48,6 +48,9 @@ import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
 
 /**
+ * mapping relations
+ * 1:n java type -> jdbc type
+ * 1:1 jdbc type -> type handler
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -213,6 +216,9 @@ public final class TypeHandlerRegistry {
     return getTypeHandler(javaTypeReference.getRawType(), jdbcType);
   }
 
+  /**
+   *  all overload methods for getTypeHandler come hear
+   */
   @SuppressWarnings("unchecked")
   private <T> TypeHandler<T> getTypeHandler(Type type, JdbcType jdbcType) {
     if (ParamMap.class.equals(type)) {
@@ -222,10 +228,10 @@ public final class TypeHandlerRegistry {
     TypeHandler<?> handler = null;
     if (jdbcHandlerMap != null) {
       handler = jdbcHandlerMap.get(jdbcType);
-      if (handler == null) {
+      if (handler == null) { //get null jdbc type corresponding handler
         handler = jdbcHandlerMap.get(null);
       }
-      if (handler == null) {
+      if (handler == null) { //pick the sole handler if java type has only one-type handler
         // #591
         handler = pickSoleHandler(jdbcHandlerMap);
       }
@@ -241,14 +247,14 @@ public final class TypeHandlerRegistry {
     }
     if (jdbcHandlerMap == null && type instanceof Class) {
       Class<?> clazz = (Class<?>) type;
-      if (Enum.class.isAssignableFrom(clazz)) {
+      if (Enum.class.isAssignableFrom(clazz)) { //find enum type handler , and construct a new one if neccessary
         Class<?> enumClass = clazz.isAnonymousClass() ? clazz.getSuperclass() : clazz;
         jdbcHandlerMap = getJdbcHandlerMapForEnumInterfaces(enumClass, enumClass);
         if (jdbcHandlerMap == null) {
           register(enumClass, getInstance(enumClass, defaultEnumTypeHandler));
           return typeHandlerMap.get(enumClass);
         }
-      } else {
+      } else { //find from super class
         jdbcHandlerMap = getJdbcHandlerMapForSuperclass(clazz);
       }
     }
@@ -315,6 +321,9 @@ public final class TypeHandlerRegistry {
 
   // Only handler
 
+  /**
+   *  javaType search strategy: annotation check or TypeReference<T> raw type check
+   */
   @SuppressWarnings("unchecked")
   public <T> void register(TypeHandler<T> typeHandler) {
     boolean mappedTypeFound = false;
@@ -370,6 +379,9 @@ public final class TypeHandlerRegistry {
     register((Type) type, jdbcType, handler);
   }
 
+  /**
+   * all register methods come hear finally
+   */
   private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> handler) {
     //a javaType can support multi jdbc type & corresponding handler
     if (javaType != null) {
@@ -424,17 +436,17 @@ public final class TypeHandlerRegistry {
   @SuppressWarnings("unchecked")
   public <T> TypeHandler<T> getInstance(Class<?> javaTypeClass, Class<?> typeHandlerClass) {
     if (javaTypeClass != null) {
-      try {
+      try {  //reference EnumOrdinalTypeHandler, invoke parameterize constructor
         Constructor<?> c = typeHandlerClass.getConstructor(Class.class);
         return (TypeHandler<T>) c.newInstance(javaTypeClass);
       } catch (NoSuchMethodException ignored) {
-        // ignored
+        // ignored, and use default empty parameter construct method
       } catch (Exception e) {
         throw new TypeException("Failed invoking constructor for handler " + typeHandlerClass, e);
       }
     }
     try {
-      Constructor<?> c = typeHandlerClass.getConstructor();
+      Constructor<?> c = typeHandlerClass.getConstructor(); //reference IntegeTypeHandler, invoke empty parameter constructor
       return (TypeHandler<T>) c.newInstance();
     } catch (Exception e) {
       throw new TypeException("Unable to find a usable constructor for " + typeHandlerClass, e);
@@ -442,10 +454,10 @@ public final class TypeHandlerRegistry {
   }
 
   // scan
-
+  //sacn package, load custom type handler class
   public void register(String packageName) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
-    resolverUtil.find(new ResolverUtil.IsA(TypeHandler.class), packageName);
+    resolverUtil.find(new ResolverUtil.IsA(TypeHandler.class), packageName); //find TypeHandler and it's subclass
     Set<Class<? extends Class<?>>> handlerSet = resolverUtil.getClasses();
     for (Class<?> type : handlerSet) {
       //Ignore inner classes and interfaces (including package-info.java) and abstract classes

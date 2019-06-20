@@ -21,13 +21,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * convert type between java type and jdbc type
  * @author Clinton Begin
  */
 public interface TypeHandler<T> {
 
+  /**
+   * set prepared statement parameter at specific position
+   * javaType -> jdbcType
+   */
   void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
 
   /**
+   * jdbcType -> javaType
    * @param columnName Colunm name, when configuration <code>useColumnLabel</code> is <code>false</code>
    */
   T getResult(ResultSet rs, String columnName) throws SQLException;

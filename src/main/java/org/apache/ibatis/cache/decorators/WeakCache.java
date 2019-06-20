@@ -72,7 +72,7 @@ public class WeakCache implements Cache {
       result = weakReference.get();
       if (result == null) {
         delegate.removeObject(key);
-      } else {
+      } else { //avoid object being gc, add a hard ref to it
         hardLinksToAvoidGarbageCollection.addFirst(result);
         if (hardLinksToAvoidGarbageCollection.size() > numberOfHardLinks) {
           hardLinksToAvoidGarbageCollection.removeLast();
@@ -107,6 +107,10 @@ public class WeakCache implements Cache {
     }
   }
 
+  /**
+   *  weak ref added to reference queue when ref object being gc
+   *  we can remove invalid ref by pooling the queue
+   */
   private static class WeakEntry extends WeakReference<Object> {
     private final Object key;
 

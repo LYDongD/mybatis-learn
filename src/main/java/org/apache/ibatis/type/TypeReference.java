@@ -33,6 +33,10 @@ public abstract class TypeReference<T> {
     rawType = getSuperclassTypeParameter(getClass());
   }
 
+  /**
+   *  parse raw type from hierarchy super class
+   *  reference: GenericTypeSupportedInHierarchiesTestCase/detectsTheGenericTypeTraversingTheHierarchy
+   */
   Type getSuperclassTypeParameter(Class<?> clazz) {
     Type genericSuperclass = clazz.getGenericSuperclass();
     if (genericSuperclass instanceof Class) {
